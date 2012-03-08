@@ -53,7 +53,7 @@
       });
 
       selectedPictures.on('add', function(pic) {
-      	$('#selected-pictures').append('<div class="thumbnail-pic-container" onclick="pictureDeselected(\''+pic.id+'\')" data-picid="'+pic.id+'"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+      	$('#selected-pictures').append('<div class="thumbnail-pic-container" onclick="pictureDeselected(\''+pic.id+'\')" data-picid="'+pic.id+'"><img src="'+encodeURI(pic.get('url'))+'" class="thumbnail-pic"/></div>');
       });
 
       selectedPictures.on('remove', function(pic) {
@@ -98,7 +98,7 @@
       var instagramPictures = new InstagramPictureCollection();
 
       instagramPictures.on('add', function(pic) {
-        $('#instagram-pics').append('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+        $('#instagram-pics').append('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+encodeURI(pic.get('url'))+'" class="thumbnail-pic"/></div>');
       });
 
       function loggedIn(accessToken) {
@@ -116,6 +116,10 @@
       	} else {
       		selectedPictures.add(instagramPictures.get(id));
       	}
+      }
+
+      function pictureDeselected(id) {
+        selectedPictures.remove(id);
       }
     </script>
 
