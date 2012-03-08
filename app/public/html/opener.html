@@ -43,6 +43,14 @@
         }
       });
 
+      selectedPictures.on('add', function(pic) {
+      	$('#selected-pictures').append('<div class="thumbnail-pic-container" onclick="pictureDeselected(\''+pic.id+'\')" data-picid="'+pic.id+'"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+      });
+
+      selectedPictures.on('remove', function(pic) {
+      	$('#selected-pictures div[data-picid="'+pic.id+'"]').remove();
+      });
+
       var InstagramPictureCollection = PictureCollection.extend({
         initialize: function() {
           this._loaded = false;
@@ -65,7 +73,10 @@
 		        url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+accessToken,
 		        success: function(data) {
 		        	_(data.data).each(function(value) {
-		        		thisCol.add(new Picture({url: value.images.standard_resolution.url}));
+		        		thisCol.add(new Picture({
+		        			id: value.id,
+		        			url: value.images.standard_resolution.url
+		        		}));
 		        	});
 	        	}
     		});
@@ -78,7 +89,7 @@
       var instagramPictures = new InstagramPictureCollection();
 
       instagramPictures.on('add', function(pic) {
-        $('#instagram-pics').append('<div class="thumbnail-pic-container"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+        $('#instagram-pics').append('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
       });
 
       function loggedIn(accessToken) {
@@ -88,6 +99,14 @@
 
       function loginInstagram() {
       	window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
+      }
+
+      function pictureSelected(id) {
+      	if (selectedPictures.get(id)) {
+      		selectedPictures.remove(id);
+      	} else {
+      		selectedPictures.add(instagramPictures.get(id));
+      	}
       }
     </script>
 
