@@ -75,20 +75,7 @@
             $('#instagram-pics').fadeIn(1000);
             $('#instagram-login').fadeOut(1000);
 
-            $.ajax({
-		        type: "GET",
-		        dataType: "jsonp",
-		        cache: false,
-		        url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+accessToken,
-		        success: function(data) {
-		        	_(data.data).each(function(value) {
-		        		thisCol.add(new Picture({
-		        			id: value.id,
-		        			url: value.images.standard_resolution.url
-		        		}));
-		        	});
-	        	}
-    		});
+            refreshInstagram();
           }
 
           this._loaded = !this._loaded;
@@ -97,8 +84,17 @@
 
       var instagramPictures = new InstagramPictureCollection();
 
-      instagramPictures.on('add', function(pic) {
-        $('#instagram-pics').append('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+encodeURI(pic.get('url'))+'" class="thumbnail-pic"/></div>');
+      instagramPictures.on('add', function(pic, picCol, opts) {
+        var len = $('#instagram-pics');
+        var picDiv = $('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+encodeURI(pic.get('url'))+'" class="thumbnail-pic"/></div>');
+
+        if (opts.index == 0) {
+          $('#instagram-pics').prepend(picDiv);
+        } else if (opts.index < len) {
+          $('#instagram-pics').eq(opts.index - 1).after(picDiv);
+        } else {
+          $('#instagram-pics').append(picDiv);
+        }
       });
 
       function loggedIn(accessToken) {
@@ -110,6 +106,10 @@
       	window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
       }
 
+      function clearInstagram() {
+        localStorage.removeItem('instagramKey');
+      }
+
       function pictureSelected(id) {
       	if (selectedPictures.get(id)) {
       		selectedPictures.remove(id);
@@ -118,9 +118,32 @@
       	}
       }
 
+      function refreshInstagram() {
+        if(localStorage.getItem('instagramKey')) {
+             $.ajax({
+                type: "GET",
+                dataType: "jsonp",
+                cache: false,
+                url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+localStorage.getItem('instagramKey'),
+                success: function(data) {
+                  _(data.data).each(function(value) {
+                    if (!instagramPictures.get(value.id)) {
+                      instagramPictures.add(new Picture({
+                        id: value.id,
+                        url: value.images.standard_resolution.url
+                      }),{at: 0});
+                    }
+                  });
+                }
+            });
+        }
+      }
+
       function pictureDeselected(id) {
         selectedPictures.remove(id);
       }
+
+      setInterval( "refreshInstagram()", 1000);
     </script>
 
     <h2>Pictures</h2>
