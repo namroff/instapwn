@@ -76,7 +76,7 @@
             $('#instagram-login').fadeOut(1000);
 
             refreshInstagram();
-	        	}
+          }
 
           this._loaded = !this._loaded;
         }
@@ -84,8 +84,17 @@
 
       var instagramPictures = new InstagramPictureCollection();
 
-      instagramPictures.on('add', function(pic) {
-        $('#instagram-pics').append('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+encodeURI(pic.get('url'))+'" class="thumbnail-pic"/></div>');
+      instagramPictures.on('add', function(pic, picCol, opts) {
+        var len = $('#instagram-pics');
+        var picDiv = $('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+encodeURI(pic.get('url'))+'" class="thumbnail-pic"/></div>');
+
+        if (opts.index == 0) {
+          $('#instagram-pics').prepend(picDiv);
+        } else if (opts.index < len) {
+          $('#instagram-pics').eq(opts.index - 1).after(picDiv);
+        } else {
+          $('#instagram-pics').append(picDiv);
+        }
       });
 
       function loggedIn(accessToken) {
@@ -107,28 +116,27 @@
       	} else {
       		selectedPictures.add(instagramPictures.get(id));
       	}
-     }
+      }
 
       function refreshInstagram() {
         if(localStorage.getItem('instagramKey')) {
              $.ajax({
-		        type: "GET",
-		        dataType: "jsonp",
-		        cache: false,
-		        url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+localStorage.getItem('instagramKey'),
-		        success: function(data) {
-		        	_(data.data).each(function(value) {
-                if (!instagramPictures.get(value.id)) {
-		        		  instagramPictures.add(new Picture({
-		        			  id: value.id,
-		        			  url: value.images.standard_resolution.url
-                    }),{at: 0});
+                type: "GET",
+                dataType: "jsonp",
+                cache: false,
+                url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+localStorage.getItem('instagramKey'),
+                success: function(data) {
+                  _(data.data).each(function(value) {
+                    if (!instagramPictures.get(value.id)) {
+                      instagramPictures.add(new Picture({
+                        id: value.id,
+                        url: value.images.standard_resolution.url
+                      }),{at: 0});
+                    }
+                  });
                 }
-		        	});
-	        	}
-          });
+            });
         }
-        
       }
 
       function pictureDeselected(id) {
@@ -144,9 +152,9 @@
       </div>
       <div id="picture-picker-tabs" class="tab-side-container" style="float: left; background: green">
         <ul>
-          <li><a href="#picture-picker-upload" class="button">Upload</a></li>
-          <li><a href="#picture-picker-url" class="button">URL</a></li>
-          <li><a href="#picture-picker-instagram" class="button">Instagram</a></li>
+          <li><a href="#picture-picker-upload">Upload</a></li>
+          <li><a href="#picture-picker-url">URL</a></li>
+          <li><a href="#picture-picker-instagram">Instagram</a></li>
         </ul>
         <div id="picture-picker-panels" class="panel-container" style="display:none">
           <div class="panel" id="picture-picker-upload"></div>
