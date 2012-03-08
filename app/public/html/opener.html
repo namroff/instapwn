@@ -75,21 +75,8 @@
             $('#instagram-pics').fadeIn(1000);
             $('#instagram-login').fadeOut(1000);
 
-            $.ajax({
-		        type: "GET",
-		        dataType: "jsonp",
-		        cache: false,
-		        url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+accessToken,
-		        success: function(data) {
-		        	_(data.data).each(function(value) {
-		        		thisCol.add(new Picture({
-		        			id: value.id,
-		        			url: value.images.standard_resolution.url
-		        		}));
-		        	});
+            refreshInstagram();
 	        	}
-    		});
-          }
 
           this._loaded = !this._loaded;
         }
@@ -120,11 +107,35 @@
       	} else {
       		selectedPictures.add(instagramPictures.get(id));
       	}
+     }
+
+      function refreshInstagram() {
+        if(localStorage.getItem('instagramKey')) {
+             $.ajax({
+		        type: "GET",
+		        dataType: "jsonp",
+		        cache: false,
+		        url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+localStorage.getItem('instagramKey'),
+		        success: function(data) {
+		        	_(data.data).each(function(value) {
+                if (!instagramPictures.get(value.id)) {
+		        		  instagramPictures.add(new Picture({
+		        			  id: value.id,
+		        			  url: value.images.standard_resolution.url
+                    }),{at: 0});
+                }
+		        	});
+	        	}
+          });
+        }
+        
       }
 
       function pictureDeselected(id) {
         selectedPictures.remove(id);
       }
+
+      setInterval( "refreshInstagram()", 1000);
     </script>
 
     <h2>Pictures</h2>
@@ -133,9 +144,9 @@
       </div>
       <div id="picture-picker-tabs" class="tab-side-container" style="float: left; background: green">
         <ul>
-          <li><a href="#picture-picker-upload">Upload</a></li>
-          <li><a href="#picture-picker-url">URL</a></li>
-          <li><a href="#picture-picker-instagram">Instagram</a></li>
+          <li><a href="#picture-picker-upload" class="button">Upload</a></li>
+          <li><a href="#picture-picker-url" class="button">URL</a></li>
+          <li><a href="#picture-picker-instagram" class="button">Instagram</a></li>
         </ul>
         <div id="picture-picker-panels" class="panel-container" style="display:none">
           <div class="panel" id="picture-picker-upload"></div>
