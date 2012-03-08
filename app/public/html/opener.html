@@ -52,6 +52,14 @@
         }
       });
 
+      selectedPictures.on('add', function(pic) {
+      	$('#selected-pictures').append('<div class="thumbnail-pic-container" onclick="pictureDeselected(\''+pic.id+'\')" data-picid="'+pic.id+'"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+      });
+
+      selectedPictures.on('remove', function(pic) {
+      	$('#selected-pictures div[data-picid="'+pic.id+'"]').remove();
+      });
+
       var InstagramPictureCollection = PictureCollection.extend({
         initialize: function() {
           this._loaded = false;
@@ -74,7 +82,10 @@
 		        url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+accessToken,
 		        success: function(data) {
 		        	_(data.data).each(function(value) {
-		        		thisCol.add(new Picture({url: value.images.standard_resolution.url}));
+		        		thisCol.add(new Picture({
+		        			id: value.id,
+		        			url: value.images.standard_resolution.url
+		        		}));
 		        	});
 	        	}
     		});
@@ -87,25 +98,30 @@
       var instagramPictures = new InstagramPictureCollection();
 
       instagramPictures.on('add', function(pic) {
-        $('#instagram-pics').append('<div class="thumbnail-pic-container"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+        $('#instagram-pics').append('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
       });
 
       function loggedIn(accessToken) {
+      	localStorage.setItem('instagramKey', accessToken);
         instagramPictures.load.apply(instagramPictures, arguments);
       }
 
       function loginInstagram() {
-        window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
+      	window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
+      }
+
+      function pictureSelected(id) {
+      	if (selectedPictures.get(id)) {
+      		selectedPictures.remove(id);
+      	} else {
+      		selectedPictures.add(instagramPictures.get(id));
+      	}
       }
     </script>
 
     <h2>Pictures</h2>
     <div id="picture-picker">
       <div id="selected-pictures" style="float: left; height: 302px; width: 600px; overflow: scroll">
-          <div class="thumbnail-pic-container"><img src="pics/lime-cat.jpg" alt="Lime Cat" class="thumbnail-pic"/></div>
-          <div class="thumbnail-pic-container"><img src="pics/little-cat.jpg" alt="Little Cat" class="thumbnail-pic"/></div>
-          <div class="thumbnail-pic-container"><img src="pics/Funny-Cat-Pictures-webmasel.jpg" alt="Funny Cat" class="thumbnail-pic"/></div>
-          <div class="thumbnail-pic-container"><img src="pics/lolgato-funny_cat_pictures_174.jpg" alt="Cool Cat" class="thumbnail-pic"/></div>
       </div>
       <div id="picture-picker-tabs" class="tab-side-container" style="float: left; background: green">
         <ul>
@@ -118,7 +134,7 @@
           <div class="panel" id="picture-picker-url"></div>
           <div class="panel" id="picture-picker-instagram">
             <div id="instagram-login" class="login-panel"><button type="button" onclick="loginInstagram()">Login</button></div>
-            <div id="instagram-pics" class="images-panel" style="display:none; z-index:20;"></div>
+            <div id="instagram-pics" class="images-panel" style="display:none; z-index:20; overflow:scroll"></div>
           </div>
         </div>
       </div>
@@ -137,6 +153,10 @@
       var picsWidth = $('#selected-pictures').width();
 
       $('#picture-picker-tabs').bind('easytabs:before', function (event, $clicked, $targetPanel, settings) {
+      	if ($targetPanel.attr('id') == 'picture-picker-instagram' && localStorage.getItem('instagramKey')) {
+      		loggedIn(localStorage.getItem('instagramKey'));
+      	}
+
         var hiding = $clicked.hasClass('selected-tab');
 
         if (hiding) {
