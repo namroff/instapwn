@@ -1,0 +1,13 @@
+<html>
+<head>
+	<script type="text/javascript">
+	  var url = window.location.toString(),
+	  	hashString = url.match( /(.*)(access_token=)(.*)/ )[3];
+	  window.opener.loggedIn(hashString);
+	  window.close();
+	</script>
+</head>
+<body>
+	Logged in
+</body>
+</html>
