@@ -23,7 +23,7 @@
 		        	console.dir(data);
 
 		        	var images = _(data.data).map(function(value) {
-		        		return '<img src=\''+value.images.thumbnail.url+'\'></img>';
+		        		return '<img src=\''+value.images.standard_resolution.url+'\'></img>';
 		        	});
 
 		        	$('div.results')[0].innerHTML = images.join('');
