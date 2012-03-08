@@ -6,26 +6,36 @@
 	<script type="text/javascript" src="/scripts/jquery.easytabs.js"></script>
 
 	<style>	
-.tab-side-container { background: #fff; border: solid 1px; height: 300px;/* width: 300px;*/ }
-.tab-side-container ul { height: 300px; list-style: none; margin: 0; padding: 0; background: #ccc; float: right; border-right: solid 1px; }
-.tab-side-container ul li { width: 100px; margin: 0; padding: 0; text-align: center; }
-.tab-side-container ul li a { display: block; padding: 15px 0; outline: none; }
-.tab-side-container ul li a:hover { text-decoration: underline; }
-.tab-side-container ul li.selected-tab { background: #fff; position: relative; left: 1px; border-style: solid; border-width: 1px 0; }
-.tab-side-container ul li:first-child.selected-tab { border-top: none; }
-.tab-side-container ul li a.selected-tab { font-weight: bold; text-decoration: none; }
-.tab-side-container .panel-container { background: #fff; padding-top: 5px; padding-left: 120px; }
+    .tab-side-container { background: #fff; border: solid 1px; height: 300px;/* width: 300px;*/ }
+    .tab-side-container ul { height: 300px; list-style: none; margin: 0; padding: 0; background: #ccc; float: right; border-right: solid 1px; }
+    .tab-side-container ul li { width: 100px; margin: 0; padding: 0; text-align: center; }
+    .tab-side-container ul li a { display: block; padding: 15px 0; outline: none; }
+    .tab-side-container ul li a:hover { text-decoration: underline; }
+    .tab-side-container ul li.selected-tab { background: #fff; position: relative; left: 1px; border-style: solid; border-width: 1px 0; }
+    .tab-side-container ul li:first-child.selected-tab { border-top: none; }
+    .tab-side-container ul li a.selected-tab { font-weight: bold; text-decoration: none; }
+    .tab-side-container .panel-container { background: #fff; padding-top: 5px; padding-left: 120px; }
 
-.thumbnail-pic { max-width: 200px; max-height: 150px; }
-.thumbnail-pic-container { float: left; width: 200px; height: 150px; }
+    .thumbnail-pic { max-width: 200px; max-height: 150px; }
+    .thumbnail-pic-container { float: left; width: 200px; height: 150px; }
 
-.login-panel, .images-panel {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0; 
-}
+    .login-panel, .images-panel {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0; 
+    }
+
+    div.images-panel {
+      overflow: scroll;
+    }
+
+    div#picture-picker-instagram {
+      position:relative;
+      left: -110px; 
+      height: 100%;
+    }
 	</style>
 </head>
 <body>
@@ -40,6 +50,14 @@
       var selectedPictures = new PictureCollection({
         initialize: function() {
         }
+      });
+
+      selectedPictures.on('add', function(pic) {
+      	$('#selected-pictures').append('<div class="thumbnail-pic-container" onclick="pictureDeselected(\''+pic.id+'\')" data-picid="'+pic.id+'"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+      });
+
+      selectedPictures.on('remove', function(pic) {
+      	$('#selected-pictures div[data-picid="'+pic.id+'"]').remove();
       });
 
       var InstagramPictureCollection = PictureCollection.extend({
@@ -64,7 +82,10 @@
 		        url: "https://api.instagram.com/v1/users/self/media/recent/?access_token="+accessToken,
 		        success: function(data) {
 		        	_(data.data).each(function(value) {
-		        		thisCol.add(new Picture({url: value.images.standard_resolution.url}));
+		        		thisCol.add(new Picture({
+		        			id: value.id,
+		        			url: value.images.standard_resolution.url
+		        		}));
 		        	});
 	        	}
     		});
@@ -77,25 +98,30 @@
       var instagramPictures = new InstagramPictureCollection();
 
       instagramPictures.on('add', function(pic) {
-        $('#instagram-pics').append('<div class="thumbnail-pic-container"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
+        $('#instagram-pics').append('<div class="thumbnail-pic-container" onclick="pictureSelected(\''+pic.id+'\')"><img src="'+pic.get('url')+'" class="thumbnail-pic"/></div>');
       });
 
       function loggedIn(accessToken) {
+      	localStorage.setItem('instagramKey', accessToken);
         instagramPictures.load.apply(instagramPictures, arguments);
       }
 
       function loginInstagram() {
-        window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
+      	window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
+      }
+
+      function pictureSelected(id) {
+      	if (selectedPictures.get(id)) {
+      		selectedPictures.remove(id);
+      	} else {
+      		selectedPictures.add(instagramPictures.get(id));
+      	}
       }
     </script>
 
     <h2>Pictures</h2>
     <div id="picture-picker">
       <div id="selected-pictures" style="float: left; height: 302px; width: 600px; overflow: scroll">
-          <div class="thumbnail-pic-container"><img src="pics/lime-cat.jpg" alt="Lime Cat" class="thumbnail-pic"/></div>
-          <div class="thumbnail-pic-container"><img src="pics/little-cat.jpg" alt="Little Cat" class="thumbnail-pic"/></div>
-          <div class="thumbnail-pic-container"><img src="pics/Funny-Cat-Pictures-webmasel.jpg" alt="Funny Cat" class="thumbnail-pic"/></div>
-          <div class="thumbnail-pic-container"><img src="pics/lolgato-funny_cat_pictures_174.jpg" alt="Cool Cat" class="thumbnail-pic"/></div>
       </div>
       <div id="picture-picker-tabs" class="tab-side-container" style="float: left; background: green">
         <ul>
@@ -106,9 +132,9 @@
         <div id="picture-picker-panels" class="panel-container" style="display:none">
           <div class="panel" id="picture-picker-upload"></div>
           <div class="panel" id="picture-picker-url"></div>
-          <div class="panel" id="picture-picker-instagram" style="position:relative;left: -110px; height: 200px">
+          <div class="panel" id="picture-picker-instagram">
             <div id="instagram-login" class="login-panel"><button type="button" onclick="loginInstagram()">Login</button></div>
-            <div id="instagram-pics" class="images-panel" style="display:none; z-index:20;"></div>
+            <div id="instagram-pics" class="images-panel" style="display:none; z-index:20; overflow:scroll"></div>
           </div>
         </div>
       </div>
@@ -127,6 +153,10 @@
       var picsWidth = $('#selected-pictures').width();
 
       $('#picture-picker-tabs').bind('easytabs:before', function (event, $clicked, $targetPanel, settings) {
+      	if ($targetPanel.attr('id') == 'picture-picker-instagram' && localStorage.getItem('instagramKey')) {
+      		loggedIn(localStorage.getItem('instagramKey'));
+      	}
+
         var hiding = $clicked.hasClass('selected-tab');
 
         if (hiding) {
