@@ -82,11 +82,12 @@
       });
 
       function loggedIn(accessToken) {
+      	localStorage.setItem('instagramKey', accessToken);
         instagramPictures.load.apply(instagramPictures, arguments);
       }
 
       function loginInstagram() {
-        window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
+      	window.open('https://instagram.com/oauth/authorize/?client_id=3e380aed579d4751a85b6157a298da6e&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fhtml%2Fopened.html&response_type=token');
       }
     </script>
 
@@ -128,6 +129,10 @@
       var picsWidth = $('#selected-pictures').width();
 
       $('#picture-picker-tabs').bind('easytabs:before', function (event, $clicked, $targetPanel, settings) {
+      	if ($targetPanel.attr('id') == 'picture-picker-instagram' && localStorage.getItem('instagramKey')) {
+      		loggedIn(localStorage.getItem('instagramKey'));
+      	}
+
         var hiding = $clicked.hasClass('selected-tab');
 
         if (hiding) {
